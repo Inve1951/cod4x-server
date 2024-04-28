@@ -148,7 +148,7 @@ P_P_F void Plugin_AddCommand(char *name, xcommand_t xcommand, int power)
 
 }
 
-P_P_F void Plugin_RemoveCommand(char *name)
+P_P_F void Plugin_RemoveCommand(const char *name)
 {
 //    int i;
     volatile int pID;
@@ -714,7 +714,7 @@ P_P_F ftRequest_t* Plugin_HTTP_MakeHttpRequest(const char* url, const char* meth
   if(curfileobj == NULL)
   {
     Com_Printf(CON_CHANNEL_PLUGINS,"Couldn't connect to server.\n");
-    return qfalse;
+    return NULL;
   }
 
   return curfileobj;
@@ -746,7 +746,7 @@ P_P_F ftRequest_t* Plugin_HTTP_Request(const char* url, const char* method, byte
   if(curfileobj == NULL)
   {
     Com_Printf(CON_CHANNEL_PLUGINS,"Couldn't connect to server.\n");
-    return qfalse;
+    return NULL;
   }
 
   do
@@ -759,7 +759,7 @@ P_P_F ftRequest_t* Plugin_HTTP_Request(const char* url, const char* method, byte
   {
     Com_Printf(CON_CHANNEL_PLUGINS,"Receiving data has failed\n");
     FileDownloadFreeRequest(curfileobj);
-    return qfalse;
+    return NULL;
   }
   return curfileobj;
 }
@@ -817,7 +817,7 @@ P_P_F void Plugin_LeaveCriticalSection()
 P_P_F qboolean Plugin_CreateNewThread(void* (*ThreadMain)(void*), threadid_t *tid, void* arg)
 {
   mvabuf;
-  threadid_t threadId = -1;
+  threadid_t threadId = (threadid_t)-1;
   qboolean r;
 
   if(enable_threaddebug)
@@ -1088,15 +1088,15 @@ A Com_Printf that only shows up if the "developer" cvar is set
 P_P_F void Plugin_DPrintf( const char *fmt, ...) {
 	va_list		argptr;
 	char		msg[MAXPRINTMSG];
-		
+
 	if ( !Com_IsDeveloper() ) {
 		return;			// don't confuse non-developers with techie stuff...
 	}
-	
+
 	msg[0] = '^';
 	msg[1] = '2';
 
-	va_start (argptr,fmt);	
+	va_start (argptr,fmt);
 	Q_vsnprintf (&msg[2], (sizeof(msg)-3), fmt, argptr);
 	va_end (argptr);
 

@@ -485,7 +485,7 @@ void CStringEdPackage::AddFlagReference( LPCSTR psLocalReference, LPCSTR psFlagN
 	if (iMask == 0)
 	{
 		m_vstrFlagNames.push_back( psFlagName );
-		iMask = 1 << (m_vstrFlagNames.size()-1);
+		iMask = 1u << (m_vstrFlagNames.size()-1);
 		m_mapFlagMasks[ psFlagName ] = iMask;
 	}
 	//

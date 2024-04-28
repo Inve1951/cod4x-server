@@ -21,7 +21,7 @@
 cvar_t* r_reflectionProbeGenerate;
 cvar_t* r_modelVertColor;
 struct GfxWorld s_world;
-byte cgMedia[0x27C0]; 
+byte cgMedia[0x27C0];
 
 
 extern "C"
@@ -92,7 +92,7 @@ void __cdecl RB_UnbindAllImages()
 {
 }
 
-void __cdecl R_DelayLoadImage(union XAssetHeader header)
+void __cdecl R_DelayLoadImage(void *header, void *unknown)
 {
 }
 

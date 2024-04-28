@@ -389,8 +389,7 @@ void VectorInverse( vec3_t v ) {
 
 void AngleVectors( const vec3_t angles, vec3_t forward, vec3_t right, vec3_t up ) {
 	float angle;
-	static float sr, sp, sy, cr, cp, cy;
-	// static to help MS compiler fp bugs
+	float sr, sp, sy, cr, cp, cy;
 
  	assert(!IS_NAN(angles[0]) && !IS_NAN(angles[1]) && !IS_NAN(angles[2]));
 
@@ -603,7 +602,7 @@ void MatrixMultiply( float in1[3][3], float in2[3][3], float out[3][3] ) {
 
 
 
-void __cdecl MatrixMultiply43(const float (*in1)[3], const float (*in2)[3], float (*out)[3])
+void __cdecl NO_SANITIZE_ARRAY_BOUNDS MatrixMultiply43(const float (*in1)[3], const float (*in2)[3], float (*out)[3])
 {
   assert((void*)in1 != (void*)out);
   assert((void*)in2 != (void*)out);
@@ -623,7 +622,7 @@ void __cdecl MatrixMultiply43(const float (*in1)[3], const float (*in2)[3], floa
 }
 
 
-void __cdecl MatrixTranspose(const float (*in)[3], float (*out)[3])
+void __cdecl NO_SANITIZE_ARRAY_BOUNDS MatrixTranspose(const float (*in)[3], float (*out)[3])
 {
   assert( (void*)in != (void*)out);
 
@@ -911,17 +910,17 @@ void __cdecl QuatLerp(const float *qa, const float *qb, float frac, float *out)
 }
 
 
-static int sRandSeed;
+static unsigned int sRandSeed;
 
 unsigned int __cdecl ms_rand()
 {
   sRandSeed = 214013 * sRandSeed + 2531011;
-  return ((unsigned int)sRandSeed >> 16) & 0x7FFF;
+  return (sRandSeed >> 16) & 0x7FFF;
 }
 
 void __cdecl ms_srand(int seed)
 {
-  sRandSeed = seed;
+  sRandSeed = (unsigned int)seed;
 }
 
 long double __cdecl randomf()

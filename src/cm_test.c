@@ -97,7 +97,7 @@ void CM_BoxLeafnums_r( leafList_t *ll, int nodenum ) {
 	cNode_t     *node;
 	int s;
 
-	
+
 	while ( nodenum >= 0 )
 	{
 		node = &cm.nodes[nodenum];
@@ -116,7 +116,7 @@ void CM_BoxLeafnums_r( leafList_t *ll, int nodenum ) {
 			nodenum = node->children[1];
 		}
 	}
-	
+
 	CM_StoreLeafs( ll, nodenum );
 
 }
@@ -174,7 +174,7 @@ int CM_PointContentsLeafBrushNode_r(const float *p, cLeafBrushNode_t *node)
   {
 	int brushnum = node->data.leaf.brushes[k];
     b = &cm.brushes[brushnum];
-    for(u = 0; b->mins[u] <= p[u] && b->maxs[u] >= p[u] && u < 3; ++u);
+    for(u = 0; u < 3 && b->mins[u] <= p[u] && b->maxs[u] >= p[u]; ++u);
     if ( u >= 3 )
     {
 		// see if the point is in the brush

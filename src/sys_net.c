@@ -1058,7 +1058,7 @@ qboolean NET_CompareBaseAdrMask(netadr_t *a, netadr_t *b, int netmask)
 	netmask &= 0x07;
 	if(netmask)
 	{
-		cmpmask = (1 << netmask) - 1;
+		cmpmask = (1u << netmask) - 1;
 		cmpmask <<= 8 - netmask;
 
 		if((addra[curbyte] & cmpmask) == (addrb[curbyte] & cmpmask))

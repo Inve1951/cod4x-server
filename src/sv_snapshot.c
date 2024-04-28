@@ -668,7 +668,7 @@ static void SV_AddCachedEntitiesVisibleFromPoint(int from_num_entities, int from
 	for ( e = 0 ; e < from_num_entities ; e++ ) {
 
 	    aent = &svs.cachedSnapshotEntities[(e + from_first_entity) % maxCachedSnapshotEntities];
-        if ( (1 << (clientNum & 31)) & aent->r.clientMask[clientNum >> 5] || aent->s.number == clientNum )
+        if ( (1u << (clientNum & 31)) & aent->r.clientMask[clientNum >> 5] || aent->s.number == clientNum )
 		{
 			continue;
 		}
@@ -761,7 +761,7 @@ static void SV_AddEntitiesVisibleFromPoint( float *origin, int clientNum, snapsh
 
 		if ( !ent->r.broadcastTime )
 		{
-		  if ( ent->r.svFlags & 1 || (1 << (clientNum & 31)) & ent->r.clientMask[clientNum >> 5] )
+		  if ( ent->r.svFlags & 1 || (1u << (clientNum & 31)) & ent->r.clientMask[clientNum >> 5] )
 		  {
 		    continue;
 		  }
@@ -1457,9 +1457,9 @@ void MSG_TestDeltaCS(snapshotInfo_t* snapInfo, int time, clientState_t* baseline
 
 void SV_ArchiveSnapshot(msg_t *msg)
 {
-//  struct MatchState *matchState; 
+//  struct MatchState *matchState;
   clientState_t *cs2;
-  clientState_t *cs3; 
+  clientState_t *cs3;
   clientState_t *lcs;
   cachedClient_t *cachedClient2;
   int e;
@@ -1772,7 +1772,7 @@ void SV_ArchiveSnapshot(msg_t *msg)
         /*&& !(gent->r.svFlags & 0x80)*/ )
       {
 	baseline = &svsHeader.svEntities[gent->s.number].baseline;
-	
+
 	assert(baseline);
 
         archEnt = &svsHeader.cachedSnapshotEntities[svsHeader.nextCachedSnapshotEntities % svsHeader.numCachedSnapshotEntities];
@@ -1787,7 +1787,7 @@ void SV_ArchiveSnapshot(msg_t *msg)
 
 	VectorCopy(gent->r.absmax, archEnt->r.absmax);
 	VectorCopy(gent->r.absmin, archEnt->r.absmin);
-	
+
         snapInfo.fromBaseline = 1;
 
 #ifndef NDEBUG
@@ -1924,13 +1924,13 @@ cachedSnapshot_t* SV_GetCachedSnapshotInternal(int archivedFrame, int depth, boo
     cachedFrame->usesDelta = 0;
     cachedFrame->time = MSG_ReadLong(&msg);
 //    cachedFrame->physicsTime = MSG_ReadLong(&msg);
-    
+
     MSG_ClearLastReferencedEntity(&msg);
 /*
     MSG_ReadDeltaMatchState(&msg, cachedFrame->time, 0, &svs.cachedSnapshotMatchStates[svs.nextCachedSnapshotMatchStates % svs.numCachedSnapshotMatchStates]);
-    
+
     ++svs.nextCachedSnapshotMatchStates;
-    
+
     MSG_ClearLastReferencedEntity(&msg);
 */
     while ( MSG_ReadBit(&msg) )
@@ -2042,8 +2042,8 @@ cachedSnapshot_t* SV_GetCachedSnapshotInternal(int archivedFrame, int depth, boo
     cachedFrame->time = MSG_ReadLong(&msg);
 //    cachedFrame->physicsTime = MSG_ReadLong(&msg);
     MSG_ClearLastReferencedEntity(&msg);
-/*	
-    MSG_ReadDeltaMatchState( &msg, cachedFrame->time, 
+/*
+    MSG_ReadDeltaMatchState( &msg, cachedFrame->time,
       &svs.cachedSnapshotMatchStates[oldCachedFrame->matchState % svs.numCachedSnapshotMatchStates],
       &svs.cachedSnapshotMatchStates[svs.nextCachedSnapshotMatchStates % svs.numCachedSnapshotMatchStates]);
 
@@ -2087,7 +2087,7 @@ cachedSnapshot_t* SV_GetCachedSnapshotInternal(int archivedFrame, int depth, boo
       if ( oldnum == newnum )
       {
         cachedClient = &svs.cachedSnapshotClients[svs.nextCachedSnapshotClients % svs.numCachedSnapshotClients];
-	assert(cachedClient != oldCachedClient);		
+	assert(cachedClient != oldCachedClient);
 
 
         MSG_ReadDeltaClient(&msg, cachedFrame->time, &oldCachedClient->cs, &cachedClient->cs, newnum);

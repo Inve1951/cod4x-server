@@ -73,14 +73,13 @@ unsigned long long com_frameTime = 0;
 
 cvar_t* com_version;
 cvar_t* com_shortversion;
-cvar_t* com_dedicated;
+extern cvar_t* com_dedicated;
 cvar_t* com_timescale;
 cvar_t* com_fixedtime;
 cvar_t* com_maxFrameTime;
 cvar_t* com_animCheck;
 cvar_t* com_developer;
 cvar_t* useFastFile;
-cvar_t* com_developer;
 cvar_t* com_developer_script;
 cvar_t* com_logfile;
 cvar_t* com_sv_running;
@@ -1606,7 +1605,7 @@ void* Debug_HitchWatchdog(void* arg)
         ++watchdog_timer;
         if(watchdog_timer >= 40)
             asm("int $3");
-            
+
         Sys_LeaveCriticalSection(CRITSECT_WATCHDOG);
         Sys_SleepMSec(100);
     }

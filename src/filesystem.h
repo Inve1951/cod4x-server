@@ -75,7 +75,7 @@ typedef struct {	//Verified
 	int			hasOpenFile;
 	int			numfiles;					// number of files in pk3
 	int			referenced;					// referenced file flags
-	int			hashSize;					// hash table size (power of 2)		+0x318
+	unsigned int			hashSize;					// hash table size (power of 2)		+0x318
 	fileInPack_t*	*hashTable;					// hash table	+0x31c
 	fileInPack_t*	buildBuffer;				// buffer with the filenames etc. +0x320
 } pack_t;

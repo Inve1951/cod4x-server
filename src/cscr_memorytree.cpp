@@ -144,8 +144,8 @@ void MemoryTree::MT_DumpTree( )
     {
       Com_Printf(CON_CHANNEL_PARSERSCRIPT, "%s\n", MT_NodeInfoString(nodeNum));
       ++totalAlloc;
-      totalAllocBuckets += 1 << gScrMemTreeDebugGlob.mt_usage_size[nodeNum];
-      mt_type_usage[type] += 1 << gScrMemTreeDebugGlob.mt_usage_size[nodeNum];
+      totalAllocBuckets += 1u << gScrMemTreeDebugGlob.mt_usage_size[nodeNum];
+      mt_type_usage[type] += 1u << gScrMemTreeDebugGlob.mt_usage_size[nodeNum];
     }
   }
 
@@ -230,7 +230,7 @@ int MemoryTree::MT_GetScore(int num)
   {
     bits += gScrMemTreeGlob.leftBits[mtnum.b[1]];
   }
-  return mtnum.i - (gScrMemTreeGlob.numBits[mtnum.b[1]] + gScrMemTreeGlob.numBits[mtnum.b[0]]) + (1 << bits);
+  return mtnum.i - (gScrMemTreeGlob.numBits[mtnum.b[1]] + gScrMemTreeGlob.numBits[mtnum.b[0]]) + (1u << bits);
 }
 
 
@@ -410,7 +410,7 @@ bool MemoryTree::MT_RemoveMemoryNode(int oldNode, int size)
           {
             prevScore = MT_GetScore(oldNodeValue.prev);
             nextScore = MT_GetScore(oldNodeValue.next);
-            
+
             assert(prevScore != nextScore);
 
             if ( prevScore >= nextScore )
@@ -499,14 +499,22 @@ unsigned int MemoryTree::MT_AllocIndex(int numBytes, int type)
   while ( newSize != size )
   {
     --newSize;
-    MT_AddMemoryNode(nodeNum + (1 << newSize), newSize);
+    MT_AddMemoryNode(nodeNum + (1u << newSize), newSize);
   }
   assert(nodeNum >= 0 && nodeNum < MEMORY_NODE_COUNT);
 
   ++gScrMemTreeGlob.totalAlloc;
   ++gScrMemTreeGlob.avgAlloc;
   gScrMemTreeGlob.avgAllocBytes += numBytes;
-  gScrMemTreeGlob.totalAllocBuckets += 1 << size;
+  gScrMemTreeGlob.totalAllocBuckets += 1u << size;
+
+  // reset occasionally to prevent integer overflow
+  if (gScrMemTreeGlob.avgAllocBytes >= (1 << 30))
+  {
+    float tmp = (float)gScrMemTreeGlob.avgAllocBytes / (float)gScrMemTreeGlob.avgAlloc * 1'000.0f;
+    gScrMemTreeGlob.avgAllocBytes = isnan(tmp) ? 0 : tmp;
+    gScrMemTreeGlob.avgAlloc = 1'000;
+  }
 
   assert(type != 0);
   assertx( !gScrMemTreeDebugGlob.mt_usage[nodeNum], "MT_NodeInfoString( nodeNum ) = %s", MT_NodeInfoString(nodeNum));
@@ -539,7 +547,7 @@ void MemoryTree::MT_InitBits( )
       }
     }
     gScrMemTreeGlob.numBits[i] = bits;
-    for ( bits = 8; i & ((1 << bits) - 1); --bits )
+    for ( bits = 8; i & ((1u << bits) - 1); --bits )
     {
       ;
     }
@@ -595,7 +603,7 @@ void MemoryTree::MT_FreeIndex(unsigned int nodeNum, int numBytes)
 
   Sys_EnterCriticalSection(CRITSECT_MEMORY_TREE);
   --gScrMemTreeGlob.totalAlloc;
-  gScrMemTreeGlob.totalAllocBuckets -= 1 << size;
+  gScrMemTreeGlob.totalAllocBuckets -= 1u << size;
 
   assert(gScrMemTreeDebugGlob.mt_usage[nodeNum]);
   assertx(gScrMemTreeDebugGlob.mt_usage_size[nodeNum] == size, "(MT_NodeInfoString( nodeNum )) = %s", MT_NodeInfoString(nodeNum));
@@ -606,7 +614,7 @@ void MemoryTree::MT_FreeIndex(unsigned int nodeNum, int numBytes)
   {
     assert(size <= MEMORY_NODE_BITS);
 
-    lowBit = 1 << size;
+    lowBit = 1u << size;
 
     assert(nodeNum == (nodeNum & ~(lowBit - 1)));
 
@@ -634,7 +642,7 @@ bool MemoryTree::MT_Realloc(int oldNumBytes, int newNumbytes)
 
 void MemoryTree::MT_Free(void *p, int numBytes)
 {
-  assertx((MemoryNode *) p - gScrMemTreeGlob.nodes >= 0 && (MemoryNode *) p - gScrMemTreeGlob.nodes < MEMORY_NODE_COUNT, 
+  assertx((MemoryNode *) p - gScrMemTreeGlob.nodes >= 0 && (MemoryNode *) p - gScrMemTreeGlob.nodes < MEMORY_NODE_COUNT,
             "(MemoryNode *) p - gScrMemTreeGlob.nodes = %i", (MemoryNode *) p - gScrMemTreeGlob.nodes);
 
   MT_FreeIndex((MemoryNode *) p - gScrMemTreeGlob.nodes, numBytes);

@@ -44,9 +44,12 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <pwd.h>
+#if defined(__GLIBC__)
 #include <execinfo.h>
+#endif
 #include <sys/time.h>
 #include <pthread.h>
+#include <sched.h>
 #include <stdatomic.h>
 
 void Sys_InitThreadContext();
@@ -80,7 +83,7 @@ unsigned int Sys_MillisecondsRaw( void )
 
 	gettimeofday( &tp, NULL );
 
-	return tp.tv_sec * 1000 + tp.tv_usec / 1000;
+	return ((unsigned long int)tp.tv_sec) * 1000 + ((unsigned long int)tp.tv_usec) / 1000;
 }
 
 void Sys_ReplaceProcess( char *cmdline )
@@ -819,11 +822,11 @@ bool __cdecl _VirtualFree(void* lpAddress, int dwSize, uint32_t dwFreeType)
   return false;
 }
 
-DWORD __cdecl Sys_InterlockedDecrement(DWORD volatile *Addend)
+DWORD __cdecl Sys_InterlockedDecrement(_Atomic DWORD volatile *Addend)
 {
 	return atomic_fetch_sub(Addend, 1) -1;
 }
-DWORD __cdecl Sys_InterlockedIncrement(DWORD volatile *Addend)
+DWORD __cdecl Sys_InterlockedIncrement(_Atomic DWORD volatile *Addend)
 {
 	return atomic_fetch_add(Addend, 1) +1;
 }
@@ -831,7 +834,7 @@ DWORD __cdecl Sys_InterlockedCompareExchange(DWORD volatile *Destination, DWORD 
 {
 	return __sync_val_compare_and_swap(Destination, Comparand, Exchange);
 }
-DWORD __cdecl Sys_InterlockedExchangeAdd(DWORD volatile *Addend, DWORD value)
+DWORD __cdecl Sys_InterlockedExchangeAdd(_Atomic DWORD volatile *Addend, DWORD value)
 {
 	return atomic_fetch_add(Addend, value);
 }
@@ -863,7 +866,7 @@ BOOL __cdecl _CloseHandle(HANDLE handle)
 {
 
   hObject_t *hObject = (hObject_t *)handle;
-  
+
   if ( hObject->type == 'File' )
   {
     if ( hObject->fh )
@@ -1060,7 +1063,7 @@ signed int __cdecl Sys_ResetEvent(HANDLE handle)
 #ifdef __MACH__
       pthread_yield_np();
 #else
-      pthread_yield();
+      sched_yield();
 #endif
     }
     return 1;

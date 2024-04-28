@@ -88,7 +88,7 @@ unsigned int _GeoIP_seek_record ( unsigned long ipnum ) {
 		}
 		/* simply point to record in memory */
 //		buf = data + (long)RECORD_LENGTH * 2 *offset;
-		if (ipnum & (1 << depth)) {
+		if (ipnum & (1u << depth)) {
 			/* Take the right-hand branch */
 			if ( RECORD_LENGTH == 3 ) {
 				/* Most common case is completely unrolled and uses constants. */

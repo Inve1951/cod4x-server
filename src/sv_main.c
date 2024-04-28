@@ -92,7 +92,7 @@ cvar_t	*sv_zombieTime;			// seconds to sink messages after disconnect
 cvar_t	*sv_consayname;
 cvar_t	*sv_contellname;
 cvar_t	*sv_password;
-cvar_t	*g_motd;
+extern cvar_t	*g_motd;
 cvar_t	*sv_modStats;
 cvar_t	*sv_authorizemode;
 cvar_t	*sv_showasranked;
@@ -319,7 +319,6 @@ void __cdecl SV_AddServerCommand(client_t *client, int type, const char *cmd)
 {
   int v4;
   int i;
-  int j;
   int index;
   char string[64];
 
@@ -358,7 +357,7 @@ void __cdecl SV_AddServerCommand(client_t *client, int type, const char *cmd)
         Com_PrintNoRedirect(CON_CHANNEL_SERVER,"Client: %i lost reliable commands\n", client - svs.clients);
 #if 0
         Com_PrintNoRedirect(CON_CHANNEL_SERVER,"===== pending server commands =====\n");
-        for ( j = client->reliableAcknowledge + 1; j <= client->reliableSequence; ++j )
+        for (int j = client->reliableAcknowledge + 1; j <= client->reliableSequence; ++j )
     {
         Com_PrintNoRedirect(CON_CHANNEL_SERVER,"cmd %5d: %8d: %s\n", j, client->reliableCommands[j & (MAX_RELIABLE_COMMANDS - 1)].cmdTime, &client->reliableCommands[j & (MAX_RELIABLE_COMMANDS - 1)].command);
     }
@@ -1827,6 +1826,8 @@ void SV_ConnectWithUpdateProxy(client_t *cl)
 }
 
 
+#else
+#define UPDATE_PROXYSERVER_NAME ""
 #endif
 
 
@@ -2515,7 +2516,7 @@ void SV_MasterHeartbeatInit()
         {
             Com_Printf(CON_CHANNEL_SERVER,"Resolving %s \n", masterservers.servers[i].name);
             //NA_IPANY For broadcasting to all interfaces
-            res = NET_StringToAdr(masterservers.servers[i].name, &masterservers.servers[i].i4, NA_IP);				
+            res = NET_StringToAdr(masterservers.servers[i].name, &masterservers.servers[i].i4, NA_IP);
             if(res == 2)
             {
                 masterservers.servers[i].i4.port = BigShort(PORT_MASTER);
@@ -2528,7 +2529,7 @@ void SV_MasterHeartbeatInit()
                 Com_Printf(CON_CHANNEL_SERVER, "Couldn't resolve(IPv4) %s\n", masterservers.servers[i].name);
                 masterservers.servers[i].i4.type = NA_DOWN;
             }
-            res = NET_StringToAdr(masterservers.servers[i].name, &masterservers.servers[i].i6, NA_IP6);				
+            res = NET_StringToAdr(masterservers.servers[i].name, &masterservers.servers[i].i6, NA_IP6);
             if(res == 2)
             {
                 masterservers.servers[i].i6.port = BigShort(PORT_MASTER);
@@ -2576,7 +2577,7 @@ void SV_MasterHeartbeat(const char *message)
 
     // this command should be changed if the server info / status format
     // ever incompatably changes
-    
+
     /* Official CoD4X master servers used also by ingame serverbrowser */
     for(i = 0; i < masterservers.count; ++i)
     {
@@ -3414,7 +3415,7 @@ void SV_GetServerStaticHeader(){
     svs.nextCachedSnapshotEntities = svsHeader.nextCachedSnapshotEntities;
     svs.nextCachedSnapshotClients = svsHeader.nextCachedSnapshotClients;
     svs.archivedEntityCount = svsHeader.archivedEntityCount;
-    
+
     svsHeaderValid = 0;
 }
 
@@ -3743,7 +3744,7 @@ void SV_MapRestart( qboolean fastRestart ){
     SV_RestartGameProgs(pers);
     SV_BuildXAssetCSString();
 
-/*    
+/*
     // run a few frames to allow everything to settle
     for ( i = 0 ; i < 3 ; i++ ) {
         svs.time += 100;
@@ -4026,8 +4027,8 @@ void SV_BotUserMove(client_t *client)
             /* Invert second component to fit movement requirements. */
             move_pos[1] = -move_pos[1];
             /* Copy result to actual move command. */
-            ucmd.forwardmove = ((int)move_pos[0]) & 0xFF;
-            ucmd.rightmove    = ((int)move_pos[1]) & 0xFF;
+            if (!isnan(move_pos[0])) ucmd.forwardmove = ((int)move_pos[0]) & 0xFF;
+            if (!isnan(move_pos[1])) ucmd.rightmove   = ((int)move_pos[1]) & 0xFF;
 
             //Com_Printf(CON_CHANNEL_SERVER,"val: (%3d, %3d), distance: %f ", ucmd.forwardmove, ucmd.rightmove, distance);
             //Com_Printf(CON_CHANNEL_SERVER,"speed: (%d, %d)", ucmd.forwardmove, ucmd.leftmove);
@@ -4845,7 +4846,7 @@ void SV_SpawnServer(const char *mapname)
 
     // get a new checksum feed and restart the file system
     srand( Sys_MillisecondsRaw() );
-    sv.checksumFeed = ( ( (int) rand() << 16 ) ^ rand() ) ^ Sys_Milliseconds();
+    sv.checksumFeed = (int)(( ( (0xffff & (unsigned int)rand()) << 16 ) ^ rand() ) ^ Sys_Milliseconds());
 
     // DO_LIGHT_DEDICATED
     // only comment out when you need a new pure checksum string and it's associated random feed
@@ -5114,7 +5115,7 @@ void SV_ReadHostMigrationStart(netadr_t* from, msg_t* msg)
     {
         MSG_WriteLong(0);
         return;
-    }    
+    }
 
     MSG_WriteLong(1);
     Com_RandomBytes((byte*)&svs.migrationChallenge, sizeof(svs.migrationChallenge));
@@ -5161,13 +5162,13 @@ void SV_HostMigrationSendData(msg_t* inmsg, netadr_t* dest)
     byte buffer[1200];
 
     int offset, datalen;
-    
+
     if(inmsg->cursize > 0x40000)
     {
         Com_PrintError(CON_CHANNEL_SERVER, "Oversize hostmigration message generated!\n");
         return;
     }
-    
+
     int numpackets = inmsg->cursize / MIGRATION_PACKETSIZE;
     if(inmsg->cursize % MIGRATION_PACKETSIZE > 0)
     {
@@ -5297,7 +5298,7 @@ void SV_HostMigrationReadPacket(netadr_t* from, msg_t* msg)
     int packetId = messageoffset / MIGRATION_PACKETSIZE;
     int maxPacketId = (messagesize -1) / MIGRATION_PACKETSIZE;
     //Complete?
-    svs.migrationPacketReceivedBits[packetId / 8] |= (1 << packetId % 8);
+    svs.migrationPacketReceivedBits[packetId / 8] |= (1u << packetId % 8);
 
     Com_Printf(CON_CHANNEL_SERVER, "Received migration packet %d of %d\n", packetId, maxPacketId);
 

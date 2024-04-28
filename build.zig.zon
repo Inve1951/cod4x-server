@@ -1,0 +1,11 @@
+.{
+    .name = "cod4x-server",
+    .version = "0.0.0",
+    .paths = .{""},
+    .dependencies = .{
+        .nasm = .{
+            .url = "git+https://github.com/andrewrk/nasm.git#cfccd3eaba0526e360795494a0e4bc39acc4d68c",
+            .hash = "1220f9bd108d1e7097b27d388a7a65effd503598df61e34a2af02be00b22af567fc7",
+        }
+    }
+}

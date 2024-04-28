@@ -122,8 +122,8 @@ typedef enum {
     UN_NEEDUID,
     UN_OK
 }username_t;
-#pragma pack(1)
 
+#pragma pack(push ,1)
 
 struct client_s
 {
@@ -244,6 +244,8 @@ struct client_s
 };//0x0a563c
 
 typedef struct client_s client_t;
+
+#pragma pack(pop)
 
 
 #define	MAX_STREAM_SERVERS	6

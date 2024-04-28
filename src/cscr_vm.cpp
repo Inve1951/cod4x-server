@@ -21,13 +21,13 @@ extern "C" VariableValue GetEntityFieldValue(unsigned int classnum, int entnum, 
   assert ( !gScrVmPub.inparamcount );
   assert(!gScrVmPub.outparamcount);
 
-  gScrVmPub.top = gScrVmGlob.eval_stack - 1;
+  gScrVmPub.top = &gScrVmGlob.eval_stack[0] - 1;
   gScrVmGlob.eval_stack[0].type = 0;
   Scr_GetObjectField(classnum, entnum, offset);
 
   assert(!gScrVmPub.inparamcount || gScrVmPub.inparamcount == 1);
   assert(!gScrVmPub.outparamcount);
-  assert(gScrVmPub.top - gScrVmPub.inparamcount == gScrVmGlob.eval_stack - 1);
+  assert(gScrVmPub.top - gScrVmPub.inparamcount == &gScrVmGlob.eval_stack[0] - 1);
 
   gScrVmPub.inparamcount = 0;
 
@@ -170,7 +170,7 @@ jmp_buf* VM_GetJmpBuf()
 
 
 void __cdecl Scr_ErrorInternal( )
-{   
+{
   assert(gScrVarPub.error_message != NULL);
 
   if ( !gScrVarPub.evaluate && !gScrCompilePub.script_loading )
@@ -242,7 +242,7 @@ void __cdecl Scr_ClearOutParams()
 void __cdecl IncInParam()
 {
 
-  assert(((gScrVmPub.top >= gScrVmGlob.eval_stack - 1) && (gScrVmPub.top <= gScrVmGlob.eval_stack)) || ((gScrVmPub.top >= gScrVmPub.stack) && (gScrVmPub.top <= gScrVmPub.maxstack)));
+  assert(((gScrVmPub.top >= &gScrVmGlob.eval_stack[0] - 1) && (gScrVmPub.top <= gScrVmGlob.eval_stack)) || ((gScrVmPub.top >= gScrVmPub.stack) && (gScrVmPub.top <= gScrVmPub.maxstack)));
 
   Scr_ClearOutParams( );
 
@@ -432,7 +432,7 @@ int Scr_GetFunc(unsigned int paramnum)
         return -1;
     }
 
-    var = &gScrVmPub.top[-paramnum];
+    var = gScrVmPub.top - paramnum;
     if (var->type == VAR_FUNCTION)
     {
         int vmRomAddress = var->u.codePosValue - gScrVarPub.programBuffer;
@@ -454,7 +454,7 @@ int Scr_GetInt(unsigned int paramnum)
         return 0;
     }
 
-    var = &gScrVmPub.top[-paramnum];
+    var = gScrVmPub.top - paramnum;
     if (var->type == 6)
     {
         return var->u.intValue;
@@ -555,7 +555,7 @@ void Scr_InitSystem()
 
 void Scr_UpdateDebugger()
 {
-    
+
 }
 
 

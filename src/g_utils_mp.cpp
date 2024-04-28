@@ -79,7 +79,7 @@ signed int __cdecl G_DObjGetWorldTagMatrix(struct gentity_s *ent, unsigned int t
 
   ConvertQuatToMat(mat, axis);
   MatrixMultiply(axis, ent_axis, tagMat);
-  MatrixTransformVector43(mat->trans, ent_axis, &(*tagMat)[9]);
+  MatrixTransformVector43(mat->trans, ent_axis, &(&(*tagMat)[0])[9]);
   return 1;
 }
 

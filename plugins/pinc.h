@@ -126,9 +126,9 @@
 #else                                           /*Unix*/
     #if __GNUC__ >= 4                           /*Unix, modern GCC*/
         #if LANG == CPP                         /*Unix, modern GCC, G++*/
-            #define PCL extern "C" __attribute__ ((visibility ("default"))) __attribute__ ((cdecl))
+            #define PCL extern "C" __attribute__ ((visibility ("protected"))) __attribute__ ((cdecl))
         #else                                   /*Unix, modern GCC, GCC*/
-            #define PCL __attribute__ ((visibility ("default"))) __attribute__ ((cdecl))
+            #define PCL __attribute__ ((visibility ("protected"))) __attribute__ ((cdecl))
         #endif /*LANG == CPP*/
         #define PCL_LOCAL  __attribute__ ((visibility ("hidden")))
     #else                                       /*Unix, old GCC*/

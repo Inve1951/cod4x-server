@@ -90,9 +90,9 @@ byte* g_streamPos;
 unsigned int g_streamPosIndex;
 
 volatile int g_totalSize;
-volatile int g_loadedSize;
+_Atomic volatile unsigned long g_loadedSize;
 volatile int g_totalExternalBytes;
-volatile int g_loadedExternalBytes;
+_Atomic volatile unsigned long g_loadedExternalBytes;
 volatile int g_totalStreamBytes;
 bool g_trackLoadProgress;
 int g_totalWait;
@@ -302,7 +302,7 @@ void DB_ParseRequestedXAssetNum()
 		{
 			continue;
 		}
-		
+
 		if(count <= g_poolSize[i])
 		{
 			continue;
@@ -439,7 +439,7 @@ void __cdecl DB_ShutdownXAssetPools()
 
 void __cdecl DB_LoadedExternalData(int size)
 {
-  InterlockedExchangeAdd((volatile DWORD*)&g_loadedExternalBytes, size);
+  InterlockedExchangeAdd(&g_loadedExternalBytes, size);
 }
 
 double __cdecl DB_GetLoadedFraction()
@@ -775,7 +775,7 @@ qboolean __cdecl DB_ReadData()
 }
 
 //g_load.outstandingReads get increased by 1 when we have read data of amount 0x40000 or less on end of file
-//g_load.outstandingReads gets lowered by 1 when 
+//g_load.outstandingReads gets lowered by 1 when
 
 void DB_ReadXFileStage()
 {
@@ -816,7 +816,7 @@ void DB_WaitXFileStage()
     waitStart = Sys_Milliseconds();
     _SleepEx(-1, TRUE);
     g_totalWait += Sys_Milliseconds() - waitStart;
-    InterlockedIncrement((DWORD*)&g_loadedSize);
+    InterlockedIncrement(&g_loadedSize);
     g_load.stream.avail_in += 0x40000;
 }
 
@@ -995,7 +995,7 @@ void __cdecl DB_LoadXFileData(byte *pos, int count)
             {
               g_load.outstandingReads = i - 1;
               SleepEx(-1, TRUE);
-              InterlockedIncrement((DWORD*)&g_loadedSize);
+              InterlockedIncrement(&g_loadedSize);
               g_load.stream.avail_in += 0x40000;
             }
             DB_AuthLoad_InflateEnd(&g_load.stream);
@@ -2143,9 +2143,10 @@ const char *__cdecl DB_GetXAssetName(struct XAsset *asset)
 }
 
 
-void __cdecl DB_MaterialSetName(union XAssetHeader *xasset, const char *name)
+void __cdecl DB_MaterialSetName(void *xasset, const char *name)
 {
-  xasset->material->info.name = name;
+  auto asset = (union XAssetHeader *)xasset;
+  asset->material->info.name = name; // material gets underaligned by `DB_AllocMaterial` (asm)
 //    *(const char**)xasset->data = name;
 }
 
@@ -2950,8 +2951,8 @@ void __cdecl DB_UnloadXZoneInternal(unsigned int zoneIndex, bool createDefault)
               || (debugname[0] && !Q_stricmp(DB_GetXAssetName(&assetEntry->asset), debugname)) )
             {
 
-              Com_Printf(CON_CHANNEL_SYSTEM, "DB_UnloadXZoneInternal: reverted to asset: '%s','%s' from %s\n", 
-		DB_GetXAssetTypeName(assetEntry->asset.type), DB_GetXAssetName(&assetEntry->asset), 
+              Com_Printf(CON_CHANNEL_SYSTEM, "DB_UnloadXZoneInternal: reverted to asset: '%s','%s' from %s\n",
+		DB_GetXAssetTypeName(assetEntry->asset.type), DB_GetXAssetName(&assetEntry->asset),
 		g_zones[(uint8_t)assetEntry->zoneIndex].zoneinfo.name);
             }
           }
@@ -2974,7 +2975,7 @@ void __cdecl DB_UnloadXZoneInternal(unsigned int zoneIndex, bool createDefault)
               if ( db_xassetdebugtype->integer == -1 || db_xassetdebugtype->integer == assetEntry->asset.type
                   || (debugname[0] && !Q_stricmp(DB_GetXAssetName(&assetEntry->asset), debugname)) )
               {
-                Com_Printf(CON_CHANNEL_SYSTEM, "DB_UnloadXZoneInternal: using default for asset: '%s','%s'\n", 
+                Com_Printf(CON_CHANNEL_SYSTEM, "DB_UnloadXZoneInternal: using default for asset: '%s','%s'\n",
                     DB_GetXAssetTypeName(assetEntry->asset.type), DB_GetXAssetName(&assetEntry->asset));
               }
             }
@@ -3433,7 +3434,7 @@ XAssetHeader __cdecl DB_FindXAssetHeader(XAssetType type, const char *name, bool
     if ( namelen > bspextlen && !Q_strncmp(bspext, &name[namelen - bspextlen], bspextlen) )
     {
       for ( basename = &name[strlen(so_prefix)]; *basename && *basename != '_'; ++basename );
-      
+
       if ( !*basename )
       {
         Com_PrintError(CON_CHANNEL_ERROR, "Bad specop level name\n");
@@ -3463,7 +3464,7 @@ XAssetHeader __cdecl DB_FindXAssetHeader(XAssetType type, const char *name, bool
       {
         ent = DB_FindXAssetEntry(type, name);
       }
-      assetEntry = &ent->entry;
+      assetEntry = ent ? &ent->entry : nullptr;
       Sys_LeaveCriticalSection(CRITSECT_DBHASH);
       /*
       if ( use_so_name )
@@ -3568,7 +3569,7 @@ returnAsset:
   {
     ent = DB_FindXAssetEntry(type, name);
   }
-  assetEntry = &ent->entry;
+  assetEntry = ent ? &ent->entry : nullptr;
   if ( ent )
   {
     assert(assetEntry->asset.header.data);
@@ -3871,7 +3872,7 @@ void __cdecl DB_DelayedCloneXAsset(XAssetEntry *newEntry)
   const char *assetname;
   const char *debugname;
   unsigned int i;
-  
+
   if ( g_sync )
   {
     if ( db_xassetdebug->boolean )
@@ -3909,7 +3910,7 @@ void __cdecl DB_DelayedCloneXAsset(XAssetEntry *newEntry)
         || (debugname[0] && !Q_stricmp(debugname, assetname)) )
       {
         assetname = DB_GetXAssetName(&newEntry->asset);
-        Com_Printf(CON_CHANNEL_SYSTEM, "DB_DelayedCloneXAsset: postponed load asset: '%s','%s' from fastfile %s\n", 
+        Com_Printf(CON_CHANNEL_SYSTEM, "DB_DelayedCloneXAsset: postponed load asset: '%s','%s' from fastfile %s\n",
           DB_GetXAssetTypeName(newEntry->asset.type), assetname, g_zones[newEntry->zoneIndex].zoneinfo.name);
       }
     }
@@ -4126,7 +4127,7 @@ XAssetEntryPoolEntry *__cdecl DB_LinkXAssetEntry(XAssetEntry *argNewEntry, int a
           || (debugname[0] && !Q_stricmp(name, debugname)) )
         {
           locname = DB_GetXAssetTypeName(newEntry->entry.asset.type);
-          Com_Printf(CON_CHANNEL_SYSTEM, "DB_LinkXAssetEntry: swapping existing asset: '%s','%s' with new asset loaded from fastfile: '%s'\n", 
+          Com_Printf(CON_CHANNEL_SYSTEM, "DB_LinkXAssetEntry: swapping existing asset: '%s','%s' with new asset loaded from fastfile: '%s'\n",
             locname, name, g_zones[newEntry->entry.zoneIndex].zoneinfo.name);
         }
       }
@@ -4199,7 +4200,7 @@ void __cdecl Load_MaterialHandle(bool atStreamStart)
 
   Load_Stream(atStreamStart, varMaterialHandle, 4);
   DB_PushStreamPos(0);
-  value = (signed int)*varMaterialHandle; 
+  value = (signed int)*varMaterialHandle;
   if ( value )
   {
     if ( value != -1 && value != -2 )

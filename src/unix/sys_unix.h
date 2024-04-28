@@ -1,6 +1,7 @@
 #ifndef __SYS_UNIX_H__
 #define __SYS_UNIX_H__
 
+#include <pthread.h>
 
 typedef enum{FALSE, TRUE}BOOL;
 typedef unsigned int HANDLE;
@@ -34,10 +35,10 @@ DWORD __cdecl _GetLastError();
 HANDLE __cdecl _CreateFileA(char *lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, void *lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile);
 DWORD __cdecl _GetFileSize(HANDLE handle, DWORD *lpFileSizeHigh);
 
-DWORD __cdecl Sys_InterlockedDecrement(DWORD volatile *Addend);
-DWORD __cdecl Sys_InterlockedIncrement(DWORD volatile *Addend);
+DWORD __cdecl Sys_InterlockedDecrement(_Atomic DWORD volatile *Addend);
+DWORD __cdecl Sys_InterlockedIncrement(_Atomic DWORD volatile *Addend);
 DWORD __cdecl Sys_InterlockedCompareExchange(DWORD volatile *Destination, DWORD Exchange, DWORD Comparand);
-DWORD __cdecl Sys_InterlockedExchangeAdd(DWORD volatile *Addend, DWORD value);
+DWORD __cdecl Sys_InterlockedExchangeAdd(_Atomic DWORD volatile *Addend, DWORD value);
 
 void *__cdecl _VirtualAlloc(void *address, int dwSize, int flAllocationType, int flProtect);
 bool __cdecl _VirtualFree(void* lpAddress, int dwSize, uint32_t dwFreeType);

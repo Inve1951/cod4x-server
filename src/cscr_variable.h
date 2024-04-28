@@ -36,7 +36,7 @@ typedef struct
   int numScriptValues;
   int numScriptObjects;
   int numScriptThreads;
-  int totalVectorRefCount;
+  _Atomic unsigned long totalVectorRefCount;
 }scrVarPub_t;
 
 extern scrVarPub_t gScrVarPub;

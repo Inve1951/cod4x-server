@@ -1,3 +1,11 @@
+#ifndef AUTOUPDATE
+#include "q_shared.h"
+
+// Set AUTOUPDATE=true when compiling to enable this hazard.
+void Sec_Update(qboolean getbasefiles) {}
+
+#else
+
 /*
 ===========================================================================
     Copyright (C) 2010-2013  Ninja and TheKelm
@@ -37,8 +45,6 @@
 //#include <windows.h>
 #include <unistd.h>
 #include <errno.h>
-
-
 
 static char upd_binpath[1024]; //On Windows it is filepath of executable file. On Linux it is current working directory
 static char upd_execpath[1024];
@@ -159,7 +165,7 @@ char *Sec_StrTok(char *str,char *tokens,int id){
 	if(mem[id]==NULL){
 	    return NULL;
 	}
-	
+
 	for(ptr=mem[id];*ptr != 0;++ptr){
 	    //printf("---%c\n",*ptr);
 	    for(ptr2=tokens;*ptr2!=0;++ptr2){
@@ -195,7 +201,7 @@ char *Sec_StrTok(char *str,char *tokens,int id){
 	}
 	if(mem[id] == NULL) return NULL;
 	return Sec_StrTok(NULL,tokens,id); // BECAUSE I CAN.
-    }	
+    }
 }
 
 void Sec_FreeFileStruct(sec_file_t *file){
@@ -213,12 +219,12 @@ qboolean Sec_VerifyFile(byte* data, int length, const char* hash)
 		return qfalse;
 	}
 	return qtrue;
-	
-/*	
-	
+
+/*
+
 	unsigned long size;
 	char outhash[129];
-	
+
 	size = sizeof(outhash);
 	if(!Sec_HashMemory(SEC_HASH_SHA256, data, length, outhash, &size,qfalse))
 	{
@@ -250,7 +256,7 @@ qboolean Sec_BuildNeededList(sec_file_t *argcurrFile)
 
 		//Does our file already exist?
 		len = FS_ReadFileOSPath(name1, (void*)&filebuf);
-		
+
 		if(len > 0)
 		{	//Is it already the file we need? Then don't download it.
 			isvalid = Sec_VerifyFile(filebuf, len, currFile->hash);
@@ -288,11 +294,11 @@ int Sec_DownloadFile(const char* baseurl, sec_file_t *currFile)
 		const char* sfn = Sec_GetStoreFilename(currFile->path, sfnb, sizeof(sfnb));
 
 		Com_sprintf(buff, sizeof(buff), SEC_UPDATE_DOWNLOAD(baseurl, currFile->path));
-		
+
 		curfileobj = FileDownloadRequest(buff);
 		if(curfileobj == NULL)
 		{
-			return -1;	
+			return -1;
 		}
 
 		Com_Printf(CON_CHANNEL_SYSTEM,"Downloading file: \"%s\"\n\n",currFile->name);
@@ -304,7 +310,7 @@ int Sec_DownloadFile(const char* baseurl, sec_file_t *currFile)
 #endif
 			Sys_SleepUSec(20000);
 		} while (transret == 0);
-		
+
 		Com_Printf(CON_CHANNEL_SYSTEM,"\n");
 
 		if(transret < 0)
@@ -338,7 +344,7 @@ int Sec_DownloadFile(const char* baseurl, sec_file_t *currFile)
 			Com_PrintError(CON_CHANNEL_SYSTEM,"File \"%s\" is corrupt!\nUpdate aborted.\n",currFile->name);
 			return -1;
 		}
-		
+
 		Com_Printf(CON_CHANNEL_SYSTEM,"Writing file to %s\n", buff);
 		len = FS_WriteFileOSPath(buff, curfileobj->recvmsg.data + curfileobj->headerLength, curfileobj->contentLength);
 		if(len != curfileobj->contentLength)
@@ -348,62 +354,62 @@ int Sec_DownloadFile(const char* baseurl, sec_file_t *currFile)
 			return -1;
 		}
 		FileDownloadFreeRequest(curfileobj);
-		
+
 		return 1;
 }
 
 sec_file_t* Sec_ParseLine(const char* line)
 {
-	
+
 	char* ptr, *ptr2;
-	
+
 	ptr = (char*)line;
-	
+
 	sec_file_t *currFile;
-	
+
 	currFile = Sec_GMalloc(sec_file_t,1);
-	
+
 	if(currFile == NULL)
 	{
 		return currFile;
 	}
-	
+
 	Com_Memset(currFile,0,sizeof(sec_file_t));
-	
+
 	ptr2 = strchr(ptr,' ');
-	
+
 	if(ptr2 == NULL){
 		Com_PrintWarning(CON_CHANNEL_SYSTEM,"Sec_Update: Corrupt data from update server. Update aborted.\nDebug:\"%s\"\n",ptr);
 		Sec_FreeFileStruct(currFile);
 		return NULL;
 	}
 	*ptr2++ = 0;
-	
+
 	Q_strncpyz(currFile->path,ptr,sizeof(currFile->path));
-	
+
 	ptr = ptr2;
-	
+
 	ptr2 = strchr(ptr,' ');
-	
+
 	if(ptr2 == NULL){
 		Com_PrintWarning(CON_CHANNEL_SYSTEM,"Sec_Update: Corrupt data from update server. Update aborted.\nDebug:\"%s\"\n",ptr);
 		Sec_FreeFileStruct(currFile);
 		return NULL;
 	}
-	
+
 	*ptr2++ = 0;
-	
+
 	if(!isInteger(ptr, 0)){
 		Com_PrintWarning(CON_CHANNEL_SYSTEM,"Sec_Update: Corrupt data from update server - size is not a number. Update aborted.\nDebug:\"%s\"\n",ptr);
 		Sec_FreeFileStruct(currFile);
 		return NULL;
 	}
-	
+
 	currFile->size = atoi(ptr);
-	
+
 	Q_strncpyz(currFile->hash,ptr2,sizeof(currFile->hash));
 	Q_strncpyz(currFile->name,currFile->path, sizeof(currFile->name));
-	
+
 	return currFile;
 }
 
@@ -443,7 +449,7 @@ qboolean Sec_RemoveOldInstallfiles(sec_file_t *currFile)
 			currFile = currFile->next;
 			continue;
 		}
-		
+
 		Sec_GetStoreFilename(currFile->name, name1, sizeof(name1));
 
 		Q_strncat(name1, sizeof(name1), ".new");
@@ -503,7 +509,7 @@ qboolean Sec_Backupfiles(sec_file_t *currFile)
 			currFile = currFile->next;
 			continue;
 		}
-		
+
 		Sec_GetStoreFilename(currFile->name, curfilename, sizeof(curfilename));
 		Q_strncpyz(name1, curfilename, sizeof(name1));
 		Q_strncat(name1, sizeof(name1), ".old");
@@ -511,7 +517,7 @@ qboolean Sec_Backupfiles(sec_file_t *currFile)
 		Com_Printf(CON_CHANNEL_SYSTEM,"Backing up file %s...\n", curfilename);
 
 		FS_RenameOSPath(curfilename, name1);
-		fexist = FS_FileExistsOSPath(curfilename);			
+		fexist = FS_FileExistsOSPath(curfilename);
 
 		// We couldn't back it up. Raise error
 		if(fexist)
@@ -536,7 +542,7 @@ void Sec_UndoBackup(sec_file_t *currFile)
 			currFile = currFile->next;
 			continue;
 		}
-		
+
 		Com_Printf(CON_CHANNEL_SYSTEM,"Undo backup file %s...\n", currFile->name);
 
 		Sec_GetStoreFilename(currFile->name, curfilename, sizeof(curfilename));
@@ -562,7 +568,7 @@ qboolean Sec_InstallNewFiles(sec_file_t *currFile)
 {
 	char name1[1024];
 	char curfilename[1024];
-	
+
 	while(currFile != NULL)
 	{
 		if(!currFile->needed)
@@ -599,18 +605,18 @@ FILE* Sec_AutoaupdateLock()
 	FS_BuildOSPathForThread(Sys_BinaryPath(), "autoupdate.lock", "", lockfilename, 0);
 	FS_StripTrailingSeperator(lockfilename);
 	time(&start);
-	
+
 	h = fopen(lockfilename, "wb");
 
 	if(h != NULL){
 		return h;
 	}
-	
+
 	while(h == NULL)
 	{
 		time(&now);
 		if(now - start > 240)
-		{//Timeout	    
+		{//Timeout
 			return NULL;
 		}
 		h = fopen(lockfilename, "wb");
@@ -619,9 +625,9 @@ FILE* Sec_AutoaupdateLock()
 	}
 	fclose( h );
 	Sys_SleepSec(15);
-	Sys_Restart("System saw an update lock. Will restart now.");	
+	Sys_Restart("System saw an update lock. Will restart now.");
 	return NULL;
-	
+
 }
 
 
@@ -632,7 +638,7 @@ void Sec_AutoupdateUnlock(FILE* h)
 	{
 		fclose( h );
 	}
-	
+
 }
 
 cvar_t* sv_updateservers;
@@ -714,14 +720,14 @@ void Sec_Update( qboolean getbasefiles ){
     }
 
     Com_Memset(&files, 0, sizeof(files));
-	
+
 	if(filetransferobj->contentLength >= sizeof(buff))
 	{
 		len = sizeof(buff) -1;
 	}else{
 		len = filetransferobj->contentLength;
 	}
-	
+
 	memcpy(buff, filetransferobj->recvmsg.data + filetransferobj->headerLength, len);
 	buff[len] = '\0';
 
@@ -732,7 +738,7 @@ void Sec_Update( qboolean getbasefiles ){
 		FileDownloadFreeRequest(filetransferobj);
 		return;
 	}
-	
+
     /* We need to parse filenames etc */
 	ptr = Sec_StrTok(buff,"\n",42); // Yes, 42.
 
@@ -747,7 +753,7 @@ void Sec_Update( qboolean getbasefiles ){
 
 	int l1 = sscanf(Sys_GetCommonVersionString(), "%d.%d", &currentversion.major, &currentversion.minor);
 	int l2 = sscanf(version, "%d.%d", &newversion.major, &newversion.minor);
-	
+
 	if(l1 != 2 || l2 != 2)
 	{
 		Com_PrintWarning(CON_CHANNEL_SYSTEM,"Sec_Update: Corrupt version strings. Update aborted.\n");
@@ -768,7 +774,7 @@ void Sec_Update( qboolean getbasefiles ){
 		return;
 	}
 	Q_strncpyz(baseurl, ptr +9, sizeof(baseurl));
-	
+
 	//Parsing update filelist
 	while((ptr = Sec_StrTok(NULL,"\n",42)) != NULL)
 	{
@@ -883,7 +889,7 @@ void Sec_Update( qboolean getbasefiles ){
 		Sec_UndoBackup(files.next);
 
 //		MessageBoxA(NULL, "Couldn't install update", "Couldn't install update", MB_OK);
-		
+
 		Sec_AutoupdateUnlock(lockfile);
 		Com_Quit_f();
 		return;
@@ -894,10 +900,11 @@ void Sec_Update( qboolean getbasefiles ){
 
     Sec_FreeFileStruct(files.next);
 	Sec_AutoupdateUnlock(lockfile);
-	
+
     Com_Printf(CON_CHANNEL_SYSTEM,"Finalizing update...\n");
 
     Sys_Restart("System has been updated and will restart now.");
 
 }
 
+#endif

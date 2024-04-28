@@ -287,9 +287,9 @@ void QDECL Com_DPrintfLogfile( const char *fmt, ... ) {
 
 
 static volatile HANDLE wakelogfilewriter;
-static volatile DWORD logfilewriterworking;
+static _Atomic volatile unsigned long logfilewriterworking;
 static volatile qboolean logwriterenabled;
-static volatile threadid_t logthreadid = -1;
+static volatile threadid_t logthreadid = (threadid_t)-1;
 
 
 void* Com_WriteLogThread(void* null)
@@ -312,7 +312,7 @@ void* Com_WriteLogThread(void* null)
 		}
 		Sys_InterlockedDecrement(&logfilewriterworking);
 	}
-	logthreadid = -1;
+	logthreadid = (threadid_t)-1;
 	_CloseHandle(wakelogfilewriter);
 	wakelogfilewriter = 0;
 	return NULL;
@@ -331,7 +331,7 @@ void Com_CloseLogFile(volatile fileHandle_t* f)
 		Sys_InterlockedDecrement(&logfilewriterworking);
 		Sys_SleepUSec(0);
 	}
-	
+
 	FS_CloseLogFile(*f);
 	*f = 0;
 	Sys_InterlockedDecrement(&logfilewriterworking);
@@ -340,8 +340,8 @@ void Com_CloseLogFile(volatile fileHandle_t* f)
 
 fileHandle_t Com_OpenLogfile(const char* name, char mode)
 {
-	static threadid_t logthreadid = -1;
-	if(logthreadid == -1)
+	static threadid_t logthreadid = (threadid_t)-1;
+	if(logthreadid == (threadid_t)-1)
 	{
 		wakelogfilewriter = Sys_CreateEvent(1, 1, "wakelogfilewriter");
 		Sys_CreateNewThread(Com_WriteLogThread, &logthreadid, NULL);

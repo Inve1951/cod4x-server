@@ -28,6 +28,7 @@
 #include "cm_public.h"
 #include "dobj.h"
 #include "sv_world.h"
+#include "scr_vm.h" // for Scr_TerminalError only
 
 vec3_t actorLocationalMins = { -64.0, -64.0, -32.0 };
 vec3_t actorLocationalMaxs = { 64.0, 64.0, 72.0 };
@@ -566,9 +567,12 @@ void SV_LinkEntity( gentity_t *gEnt ) {
 	vec3_t min, max;
 	clipHandle_t clip;
 
+#ifndef NDEBUG
+  if (!gEnt->r.inuse) Scr_TerminalError("Error: Assert failed - Exp: gEnt->r.inuse, Function: SV_LinkEntity");
+#endif
 	assert(gEnt->r.inuse);
 
-	ent = SV_SvEntityForGentity( gEnt );
+  ent = SV_SvEntityForGentity( gEnt );
 /*
 	// Ridah, sanity check for possible currentOrigin being reset bug
 	if ( !gEnt->r.bmodel && VectorCompare( gEnt->r.currentOrigin, vec3_origin ) ) {

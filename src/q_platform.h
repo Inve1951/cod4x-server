@@ -69,7 +69,7 @@
 
 #endif
 
-#define DLLEXPORT
+#define DLLEXPORT __attribute__((visibility("protected")))
 
 #ifndef __ASM_I386__ // don't include the C bits if included from qasm.h
 
@@ -99,7 +99,7 @@
 #define ID_INLINE __inline
 #define PATH_SEP '\\'
 
-#if defined( __WIN64__ ) 
+#if defined( __WIN64__ )
 #define ARCH_STRING "x64"
 #elif defined _M_ALPHA
 #define ARCH_STRING "AXP"

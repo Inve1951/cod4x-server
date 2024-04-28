@@ -33,48 +33,25 @@ Hint: you probably want to run the server on a separate user. Please don't run t
 A more detailed server tutorial is available on [our wiki](https://github.com/callofduty4x/CoD4x_Server/wiki/Server-setup).
 [Also read about new banlists here](https://github.com/callofduty4x/CoD4x_Server/wiki/Banlists-in-version-15.9--and-other-changes)
 
-## Compiling on Linux
+## Compiling for Linux
 To compile CoD4x from source, you need to install the following prerequisites:
 
-- NASM
-- gcc
-- make
+- [Zig](https://ziglang.org) (v0.12.0 or higher)
 
-Debian/Ubuntu 32-bit:
-```
-sudo apt install nasm make git
-```
+Compile the server by running `zig build -Dtarget=x86-linux-gnu`.
 
-Debian/Ubuntu 64-bit:
-```
-sudo dpkg --add-architecture i386
-sudo apt-get update
-sudo apt-get install nasm:i386 make gcc-multilib g++-multilib git
-```
+By default, the compilation output will be placed into `zig-out/`.
 
-openSUSE 32-bit: 
-```
-sudo zypper install nasm gcc-32bit gcc-c++-32bit
-```
- 
-Arch Linux 64-bit:
-```
-sudo pacman -S nasm gcc lib32-gcc-libs make
-```
-
-Now compile the server by running `make`.
-
-If compilation was successful the binary will be placed in the `/bin/` folder.
-
-## Compiling on Windows
+## Compiling for Windows
 To compile CoD4x from source you require the following tools:
 
-- [NASM](http://www.nasm.us/pub/nasm/releasebuilds/?C=M;O=D)
-- [MinGW](http://www.mingw.org/): 'gcc' and 'mingw32-make'
+- [Zig](https://ziglang.org) (v0.12.0 or higher)
 
-Now compile the server by running `mingw32-make`.
+Compile the server by running `zig build -Dtarget=x86-windows`.
 
-If compilation was successful the binary will be placed in the `/bin/` folder.
+By default, the compilation output will be placed into `zig-out/`.
+
+> Note: Compiling to/on windows is currently untested. MSVC headers are required.
 
 ## Contributing
 CoD4x is licensed under the AGPL3 license. We welcome anybody to fork this project and submit a pull request.

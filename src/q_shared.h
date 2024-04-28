@@ -34,6 +34,10 @@
 #ifndef __Q_SHARED_H__
 #define __Q_SHARED_H__
 
+//#define NO_SANITIZE_ALIGNMENT __attribute__((no_sanitize("alignment")))
+#define NO_SANITIZE_ARRAY_BOUNDS __attribute__((no_sanitize("array-bounds")))
+#define NO_SANITIZE_FLOAT_CAST_OVERFLOW __attribute__((no_sanitize("float-cast-overflow")))
+
 //#define _LAGDEBUG
 
 #include <stdio.h>
@@ -66,14 +70,19 @@
 #define __cdecl __attribute__((cdecl))
 #endif
 
-#define DLL_PUBLIC __attribute__ ((visibility ("default")))
+#define DLL_PUBLIC __attribute__ ((visibility ("protected")))
 #define DLL_LOCAL __attribute__ ((visibility ("hidden")))
 
 #ifdef __linux
+#ifndef __clang__
 
 #define __optimize2 __attribute__ ((optimize("-O2")))
 #define __optimize3 __attribute__ ((optimize("-O3"))) __attribute__ ((noinline))
 
+#else
+#define __optimize2
+#define __optimize3
+#endif
 
 #else
 

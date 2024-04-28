@@ -411,7 +411,7 @@ void* __cdecl Sys_ThreadMain(void *parameter)
   assert(p < 2);
   assert(threadFunc[p] != NULL);
 
-  Sys_SetThreadName(-1, s_threadNames[p]);
+  Sys_SetThreadName((threadid_t)-1, s_threadNames[p]);
   Com_InitThreadData(p);
   threadFunc[p](p);
   return NULL;

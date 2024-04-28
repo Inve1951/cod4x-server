@@ -48,8 +48,10 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <pwd.h>
+#if defined(__GLIBC__)
 #include <execinfo.h>
-#include <wait.h>
+#endif
+#include <sys/wait.h>
 #include <sched.h>
 #include <pthread.h>
 
@@ -97,41 +99,48 @@ const char *Sys_TempPath( void )
 		return TMPDIR;
 }
 
-
 void Sys_PrintBacktraceGDB()
 {
 	int numFrames;
 	int i;
-	void** traces;
-	char** symbols;
+	void **traces;
+	char **symbols;
 
 	printf("---------- Crash Backtrace ----------\n");
-	traces = malloc(65536*sizeof(void*));
+#if defined(__GLIBC__)
+	traces = malloc(65536 * sizeof(void *));
 	numFrames = backtrace(traces, 65536);
-	symbols = backtrace_symbols(traces, numFrames);
-	for(i = 0; i < numFrames; i++)
+	symbols = (char **)backtrace_symbols(traces, numFrames);
+	for (i = 0; i < numFrames; i++)
 	{
-		printf("%5d: %s\n", numFrames - i -1, symbols[i]);
+		printf("%5d: %s\n", numFrames - i - 1, symbols[i]);
 	}
 	free(traces);
+#else
+	printf("not implemented\n");
+#endif
 }
 
 void Sys_PrintBacktrace()
 {
 	int numFrames;
 	int i;
-	void** traces;
-	char** symbols;
+	void **traces;
+	char **symbols;
 
-	Com_Printf(CON_CHANNEL_SYSTEM,"---------- Backtrace ----------\n");
-	traces = malloc(65536*sizeof(void*));
+	Com_Printf(CON_CHANNEL_SYSTEM, "---------- Backtrace ----------\n");
+#if defined(__GLIBC__)
+	traces = malloc(65536 * sizeof(void *));
 	numFrames = backtrace(traces, 65536);
-	symbols = backtrace_symbols(traces, numFrames);
-	for(i = 0; i < numFrames; i++)
+	symbols = (char **)backtrace_symbols(traces, numFrames);
+	for (i = 0; i < numFrames; i++)
 	{
-		Com_Printf(CON_CHANNEL_SYSTEM,"%5d: %s\n", numFrames - i -1, symbols[i]);
+		Com_Printf(CON_CHANNEL_SYSTEM, "%5d: %s\n", numFrames - i - 1, symbols[i]);
 	}
 	free(traces);
+#else
+	Com_Printf(CON_CHANNEL_SYSTEM, "not implemented\n");
+#endif
 }
 
 void Sys_DumpCrash(int signal,struct sigcontext *ctx)
@@ -217,7 +226,7 @@ unsigned int Sys_GetProcessAffinityMask()
     {
         if(CPU_ISSET(i, &set))
         {
-            AffinityMask |= (1 << i);
+            AffinityMask |= (1u << i);
         }
     }
 

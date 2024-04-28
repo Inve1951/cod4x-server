@@ -1494,7 +1494,7 @@ char* Q_BitConv(int val){
 
 		if((i+1) % 5 == 0 && i != 38 && i != 0){
 			buf[i] = ' ';
-		}else if(val & 1 << j){
+		}else if(val & 1u << j){
 			buf[i] = '1';
 			j++;
 		}else{
@@ -2123,14 +2123,19 @@ short   ShortNoSwap( short l ) {
 }
 
 int    LongSwap( int l ) {
-	byte b1,b2,b3,b4;
+	unsigned char b1, b2, b3, b4;
 
-	b1 = l & 255;
-	b2 = ( l >> 8 ) & 255;
-	b3 = ( l >> 16 ) & 255;
-	b4 = ( l >> 24 ) & 255;
+	b1 = ( l >> 0  ) & 0xff;
+	b2 = ( l >> 8  ) & 0xff;
+	b3 = ( l >> 16 ) & 0xff;
+	b4 = ( l >> 24 ) & 0xff;
 
-	return ( (int)b1 << 24 ) + ( (int)b2 << 16 ) + ( (int)b3 << 8 ) + b4;
+	return (int)(
+        (((unsigned int)b1) << 24 ) +
+        (((unsigned int)b2) << 16 ) +
+        (((unsigned int)b3) << 8  ) +
+        (((unsigned int)b4) << 0  )
+    );
 }
 
 int LongNoSwap( int l ) {

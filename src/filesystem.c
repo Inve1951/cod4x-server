@@ -232,12 +232,12 @@ cvar_t* fs_homepath;
 cvar_t* fs_restrict;
 cvar_t* fs_usedevdir;
 
-cvar_t* loc_language;
-cvar_t* loc_forceEnglish;
-cvar_t* loc_translate;
+extern cvar_t* loc_language;
+extern cvar_t* loc_forceEnglish;
+extern cvar_t* loc_translate;
 cvar_t* loc_warnings;
 cvar_t* loc_warningsAsErrors;
-qboolean g_currentAsian;
+extern qboolean g_currentAsian;
 
 
 
@@ -1136,9 +1136,9 @@ int FS_PathCmp( const char *s1, const char *s2 ) {
 return a hash value for the filename
 ================
 */
-long FS_HashFileName( const char *fname, int hashSize ) {
+long FS_HashFileName( const char *fname, unsigned int hashSize ) {
 	int i;
-	long hash;
+	unsigned long hash;
 	char letter;
 
 	hash = 0;
@@ -1159,7 +1159,7 @@ long FS_HashFileName( const char *fname, int hashSize ) {
 	}
 	hash = ( hash ^ ( hash >> 10 ) ^ ( hash >> 20 ) );
 	hash &= ( hashSize - 1 );
-	return hash;
+	return (long)hash;
 }
 
 
@@ -2442,7 +2442,7 @@ qboolean FS_VerifyPak( const char *pak ) {
 		}
 
 	}
-	
+
 	Com_sprintf(teststring, sizeof( teststring ), "%s/mod.ff", fs_gameDirVar->string);
 	if ( !Q_stricmp( teststring, pak ) ){
 		return qtrue;
@@ -2602,7 +2602,7 @@ static pack_t *FS_LoadZipFile( char *zipfile, const char *basename ) {
 		fwrite(fs_headerLongs, 4, fs_numHeaderLongs, df);
 		fclose(df);
 	}*/
-	
+
 	pack->checksum = Com_BlockChecksumKey32( fs_headerLongs, 4 * fs_numHeaderLongs, LittleLong( 0 ) );
 
 	if(fs_checksumFeed)
@@ -4528,7 +4528,7 @@ char __cdecl FS_SanitizeFilename(const char *filename, char *sanitizedName, int 
     {
       return 0;
     }
-    if ( filename[srcIndex] != '.' || (filename[srcIndex + 1] != 0 && 
+    if ( filename[srcIndex] != '.' || (filename[srcIndex + 1] != 0 &&
 	filename[srcIndex + 1] != '/' && filename[srcIndex + 1] != '\\' ))
     {
       if ( dstIndex + 1 >= sanitizedNameSize )
